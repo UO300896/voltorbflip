@@ -8,12 +8,13 @@ import { createBoard, createGrid, levelDown, states } from "../variables"
 import classNames from "classnames/bind"
 
 var cx = classNames.bind(styles)
-
+var SHIELD_VALUE = 1
 class GameContainer extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
       prevLevel: 1,
+      shield : SHIELD_VALUE, //Indicates the amount of bombs you are able to click on before losing. de San Claudio
       level: 1,
       totalCoins: 0,
       currentCoins: 0,
@@ -154,12 +155,16 @@ class GameContainer extends React.Component {
       if (!tile.flipped && this.state.status === states.GAME) {
         tile.flipped = true
         const value = tile.value
-        if (value) {
-          newState.currentCoins = (prevState.currentCoins || 1) * value
+        if (value || this.state.shield) {
+          if(value === 0)
+            this.state.shield -= 1 //Substracts a life if a bomb was selected. de San Claudio
+          else
+            newState.currentCoins = (prevState.currentCoins || 1) * value
         } else {
           newState.currentCoins = 0
           newState.status = states.GAMELOST
           newState.cursor = {}
+          newState.shield = SHIELD_VALUE //Restarts shield amount. de San Claudio
         }
       }
       return newState
@@ -203,6 +208,7 @@ class GameContainer extends React.Component {
           99999
         )
         newState.currentCoins = 0
+        newState.shield = SHIELD_VALUE; // restarts shield amount. de San Claudio
         const { board, maxCoins } = createBoard(level)
         newState.board = board
         newState.maxCoins = maxCoins
@@ -282,6 +288,10 @@ class GameContainer extends React.Component {
           <div className={styles.scoreItem}>
             Coins collected this Level:{" "}
             <Counter id="currentcoins" value={this.state.currentCoins} />
+          </div>
+          <div className={styles.scoreItem}>
+            Shield:{" "}
+            <Counter id="current lifes" value={this.state.shield} />
           </div>
         </div>
         <div className={styles.gameContainer}>
